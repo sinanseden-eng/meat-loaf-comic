@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meat Loaf: Objects In The Rear View Mirror - Comic</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Pinyon+Script&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        .font-comic { font-family: 'Comic Neue', cursive; }
+        .font-bangers { font-family: 'Bangers', cursive; }
+        .font-signature { font-family: 'Pinyon Script', cursive; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .smooth-scroll { scroll-behavior: smooth; }
+        
+        .comic-panel {
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.8);
+            border: 3px solid black;
+        }
+        @media (min-width: 640px) {
+            .comic-panel {
+                box-shadow: 10px 10px 0px rgba(0,0,0,0.8);
+                border: 4px solid black;
+            }
+        }
+
+        /* Debugger Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #22c55e;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #374151;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // --- ICONS ---
+        const Icon = ({ children, className, ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
+        );
+        const ChevronLeft = (props) => <Icon {...props}><path d="m15 18-6-6 6-6"/></Icon>;
+        const ChevronRight = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
+        const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"/></Icon>;
+        const Pause = (props) => <Icon {...props}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></Icon>;
+        const Bug = (props) => <Icon {...props}><rect width="8" height="14" x="8" y="6" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/></Icon>;
+        const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
+        const Loader2 = (props) => <Icon {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></Icon>;
+        const AlertCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></Icon>;
+
+        // --- DATA ---
+        const REPO_BASE_URL = "https://raw.githubusercontent.com/sinanseden-eng/meat-loaf-comic/main/";
+        const CACHE_BUSTER = "?v=4"; 
+
+        const pages = [
+            // ACT I: THE CRASH
+            { id: 1, type: "intro", text: "OBJECTS IN THE REAR VIEW MIRROR", subtext: "May Appear Closer Than They Are", image: `${REPO_BASE_URL}1.jpg${CACHE_BUSTER}`, bgColor: "bg-black", timestamp: 0 },
+            { id: 2, lyrics: "The skies were pure and the fields were green\nAnd the sun was brighter than it's ever been", image: `${REPO_BASE_URL}2.jpg${CACHE_BUSTER}`, bgColor: "bg-amber-600", timestamp: 25 },
+            { id: 3, lyrics: "When I grew up and we were driving blind\nWhen I grew up and we were driving blind", image: `${REPO_BASE_URL}3.jpg${CACHE_BUSTER}`, bgColor: "bg-orange-800", timestamp: 50 },
+            { id: 4, lyrics: "And he hit the pedal and he hit the wall\nAnd he hit the pedal and he hit the wall", image: `${REPO_BASE_URL}4.jpg${CACHE_BUSTER}`, bgColor: "bg-red-900", timestamp: 65 },
+            { id: 5, lyrics: "And there was nothing I could do to help him at all\nNothing I could do to help him at all", image: `${REPO_BASE_URL}5.jpg${CACHE_BUSTER}`, bgColor: "bg-slate-900", timestamp: 75, superSlowScroll: true },
+            { id: 6, lyrics: "And I can still see the twisted, burning metal...\nOh, the twisted, burning metal...", image: `${REPO_BASE_URL}6.jpg${CACHE_BUSTER}`, bgColor: "bg-zinc-950", timestamp: 88, slowScroll: true },
+            
+            // CHORUS 1
+            { id: 7, lyrics: "But it was long ago and it was far away\nAnd it was so much better than it is today", image: `${REPO_BASE_URL}7.jpg${CACHE_BUSTER}`, bgColor: "bg-blue-950", timestamp: 103 },
+            { id: 8, lyrics: "Objects in the rear view mirror may appear closer than they are\nObjects in the rear view mirror may appear closer than they are", image: `${REPO_BASE_URL}8.jpg${CACHE_BUSTER}`, bgColor: "bg-slate-800", timestamp: 119, superSlowScroll: true },
+            
+            // ACT II: THE ESCAPE
+            { id: 9, lyrics: "And there are times I think I see him peeling out of the dark\nI think he's right behind me now and he's biting my heart", image: `${REPO_BASE_URL}9.jpg${CACHE_BUSTER}`, bgColor: "bg-cyan-900", timestamp: 153 },
+            { id: 10, lyrics: "My father got a lot of anger inside\nHe never knew how to heal", image: `${REPO_BASE_URL}10.jpg${CACHE_BUSTER}`, bgColor: "bg-stone-900", timestamp: 170 },
+            { id: 11, lyrics: "But I was running from the terror, and the pain in his eyes\nI was running from the terror, and the pain in his eyes", image: `${REPO_BASE_URL}11.jpg${CACHE_BUSTER}`, bgColor: "bg-blue-900", timestamp: 185 },
+            { id: 12, lyrics: "I packed my bags and I was running in the night\nI packed my bags and I was running in the night", image: `${REPO_BASE_URL}12.jpg${CACHE_BUSTER}`, bgColor: "bg-slate-900", timestamp: 198 },
+            { id: 13, lyrics: "And there was nowhere to go, but I had to take flight\nNowhere to go, but I had to take flight", image: `${REPO_BASE_URL}13.jpg${CACHE_BUSTER}`, bgColor: "bg-sky-950", timestamp: 208, slowScroll: true },
+            
+            // CHORUS 2
+            { id: 14, lyrics: "But it was long ago and it was far away\nAnd it was so much better than it is today", image: `${REPO_BASE_URL}14.jpg${CACHE_BUSTER}`, bgColor: "bg-indigo-950", timestamp: 236 },
+            { id: 15, lyrics: "Objects in the rear view mirror may appear closer than they are\nObjects in the rear view mirror may appear closer than they are", image: `${REPO_BASE_URL}15.jpg${CACHE_BUSTER}`, bgColor: "bg-slate-800", timestamp: 251, superSlowScroll: true },
+            
+            // THE EPIC SOLO
+            { id: 16, lyrics: "[Instrumental - The Speedometer Maxing Out]", image: `${REPO_BASE_URL}16.jpg${CACHE_BUSTER}`, bgColor: "bg-red-950", timestamp: 285, noScroll: true },
+            { id: 17, lyrics: "[Guitar Solo - Driving into the night]", image: `${REPO_BASE_URL}17.jpg${CACHE_BUSTER}`, bgColor: "bg-purple-950", timestamp: 300, noScroll: true },
+            
+            // ACT III: THE ROMANCE
+            { id: 18, lyrics: "There was a beauty living on the edge of town\nAnd she always put the top up and the hammer down", image: `${REPO_BASE_URL}18.jpg${CACHE_BUSTER}`, bgColor: "bg-pink-900", timestamp: 330 },
+            { id: 19, lyrics: "And she taught me everything I'll ever know\nAbout the mystery and the muscle of love", image: `${REPO_BASE_URL}19.jpg${CACHE_BUSTER}`, bgColor: "bg-fuchsia-950", timestamp: 345 },
+            { id: 20, lyrics: "We were trembling in the dark under a heavy blanket of stars\nTrembling in the dark under a heavy blanket of stars", image: `${REPO_BASE_URL}20.jpg${CACHE_BUSTER}`, bgColor: "bg-violet-950", timestamp: 360 },
+            { id: 21, lyrics: "And there was a sudden chill and a burning heart\nA sudden chill and a burning heart", image: `${REPO_BASE_URL}21.jpg${CACHE_BUSTER}`, bgColor: "bg-rose-950", timestamp: 370 },
+            
+            // THE FINALE
+            { id: 22, lyrics: "But it was long ago and it was far away\nAnd it was so much better than it is today", image: `${REPO_BASE_URL}22.jpg${CACHE_BUSTER}`, bgColor: "bg-blue-950", timestamp: 390 },
+            { id: 23, lyrics: "Objects in the rear view mirror may appear closer than they are\nObjects in the rear view mirror may appear closer than they are", image: `${REPO_BASE_URL}23.jpg${CACHE_BUSTER}`, bgColor: "bg-slate-900", timestamp: 405, superSlowScroll: true },
+            { id: 24, lyrics: "May appear closer than they are...\nMay appear closer than they are...", image: `${REPO_BASE_URL}24.jpg${CACHE_BUSTER}`, bgColor: "bg-amber-900", timestamp: 440, slowScroll: true }
+        ];
+
+        const ComicReader = () => {
+            const [currentPage, setCurrentPage] = useState(0);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [isPlayerReady, setIsPlayerReady] = useState(false);
+            const [audioStatus, setAudioStatus] = useState('loading');
+            const [autoFlip, setAutoFlip] = useState(true);
+            const [currentTime, setCurrentTime] = useState(0);
+            const [duration, setDuration] = useState(616); // 10:16
+            const [showDebug, setShowDebug] = useState(true);
+            
+            // Dual Engine System
+            const [useMp3Fallback, setUseMp3Fallback] = useState(false);
+            const [isSilentMode, setIsSilentMode] = useState(false);
+            
+            const playerRef = useRef(null);
+            const audioRef = useRef(null);
+            const lyricScrollRef = useRef(null);
+            const requestRef = useRef(null);
+            const silentTimerRef = useRef(null);
+            const bufferingTimeoutRef = useRef(null); 
+            const totalPages = pages.length;
+            const videoId = "r7WVi-7me4I"; 
+            
+            // Fallback audio URL
+            const fallbackAudioUrl = `${REPO_BASE_URL}meat_loaf.mp3${CACHE_BUSTER}`;
+
+            // --- YOUTUBE API SETUP ---
+            useEffect(() => {
+                const initializePlayer = () => {
+                    if (!document.getElementById('youtube-player')) {
+                        setTimeout(initializePlayer, 100);
+                        return;
+                    }
+                    
+                    if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+                        playerRef.current.destroy();
+                    }
+
+                    playerRef.current = new window.YT.Player('youtube-player', {
+                        videoId: videoId,
+                        host: 'https://www.youtube-nocookie.com', // Best for bypassing strict iframe rules
+                        playerVars: { 
+                            'autoplay': 0, 
+                            'controls': 0, 
+                            'disablekb': 1, 
+                            'rel': 0,
+                            'playsinline': 1
+                        },
+                        events: {
+                            'onReady': (e) => {
+                                setIsPlayerReady(true);
+                                setAudioStatus('ready');
+                                setDuration(e.target.getDuration() || 616);
+                            },
+                            'onStateChange': (e) => {
+                                if (bufferingTimeoutRef.current) clearTimeout(bufferingTimeoutRef.current);
+
+                                if (e.data === window.YT.PlayerState.PLAYING) {
+                                    setIsPlaying(true);
+                                    setAudioStatus('ready');
+                                } else if (e.data === window.YT.PlayerState.PAUSED || e.data === window.YT.PlayerState.ENDED) {
+                                    setIsPlaying(false);
+                                } else if (e.data === window.YT.PlayerState.BUFFERING) {
+                                    setAudioStatus('loading');
+                                    // Sandbox freeze detection
+                                    bufferingTimeoutRef.current = setTimeout(() => {
+                                        if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() === window.YT.PlayerState.BUFFERING) {
+                                            console.warn("Sandbox blocked YouTube playback.");
+                                            setUseMp3Fallback(true);
+                                            setAudioStatus('error');
+                                            setIsPlaying(false);
+                                        }
+                                    }, 2000);
+                                }
+                            },
+                            'onError': (e) => {
+                                console.error("YouTube Error Code:", e.data);
+                                setUseMp3Fallback(true);
+                                setAudioStatus('error'); 
+                                setIsPlaying(false);
+                            }
+                        }
+                    });
+                };
+
+                if (!window.YT) {
+                    const tag = document.createElement('script');
+                    tag.src = "https://www.youtube.com/iframe_api";
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                    
+                    window.onYouTubeIframeAPIReady = initializePlayer;
+                } else if (window.YT && window.YT.Player) {
+                    initializePlayer();
+                }
+                
+                return () => {
+                    if (bufferingTimeoutRef.current) clearTimeout(bufferingTimeoutRef.current);
+                    if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+                        playerRef.current.destroy();
+                    }
+                };
+            }, [videoId]);
+
+            // --- SMOOTH POLLING FOR SYNC ---
+            const updateTime = useCallback(() => {
+                let time = currentTime;
+                let isCurrentlyPlaying = false;
+
+                if (isSilentMode && isPlaying) {
+                    // Fake timer for when audio is blocked in preview
+                    time = time + (16.6 / 1000); // approx 60fps
+                    isCurrentlyPlaying = true;
+                } else if (useMp3Fallback && audioRef.current) {
+                    time = audioRef.current.currentTime;
+                    isCurrentlyPlaying = !audioRef.current.paused;
+                } else if (playerRef.current && playerRef.current.getCurrentTime && isPlaying) {
+                    time = playerRef.current.getCurrentTime();
+                    isCurrentlyPlaying = true;
+                }
+
+                if (isCurrentlyPlaying) {
+                    setCurrentTime(time);
+                    if (autoFlip) {
+                        let activeIndex = 0;
+                        for (let i = 0; i < pages.length; i++) {
+                            if (time >= pages[i].timestamp) activeIndex = i;
+                            else break;
+                        }
+                        if (activeIndex !== currentPage) setCurrentPage(activeIndex);
+                    }
+                }
+                
+                requestRef.current = requestAnimationFrame(updateTime);
+            }, [isPlaying, autoFlip, currentPage, useMp3Fallback, isSilentMode, currentTime]);
+
+            useEffect(() => {
+                requestRef.current = requestAnimationFrame(updateTime);
+                return () => cancelAnimationFrame(requestRef.current);
+            }, [updateTime]);
+
+
+            // --- CONTROLS ---
+            const togglePlay = () => {
+                if (useMp3Fallback) {
+                    if (audioRef.current && !audioRef.current.error && audioRef.current.readyState > 0) {
+                        if (isPlaying) {
+                            audioRef.current.pause();
+                            setIsPlaying(false);
+                        } else {
+                            audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {
+                                setIsSilentMode(true);
+                                setIsPlaying(true);
+                            });
+                        }
+                    } else {
+                        // Fallback to silent timer mode so comic still flips
+                        setIsSilentMode(true);
+                        setIsPlaying(!isPlaying);
+                    }
+                    return;
+                }
+
+                if (!isPlayerReady || !playerRef.current || typeof playerRef.current.playVideo !== 'function') return;
+                
+                if (isPlaying) {
+                    playerRef.current.pauseVideo();
+                    setIsPlaying(false);
+                } else {
+                    playerRef.current.playVideo();
+                }
+            };
+
+            const handleSeek = (e) => {
+                const newTime = parseFloat(e.target.value);
+                setCurrentTime(newTime);
+                
+                if (autoFlip) {
+                    let activeIndex = 0;
+                    for (let i = 0; i < pages.length; i++) {
+                        if (newTime >= pages[i].timestamp) activeIndex = i;
+                        else break;
+                    }
+                    if (activeIndex !== currentPage) setCurrentPage(activeIndex);
+                }
+
+                if (isSilentMode) {
+                    // Do nothing, time is updated
+                } else if (useMp3Fallback && audioRef.current && !audioRef.current.error) {
+                    audioRef.current.currentTime = newTime;
+                } else if (playerRef.current && playerRef.current.seekTo) {
+                    playerRef.current.seekTo(newTime, true);
+                }
+            };
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = Math.floor(seconds % 60);
+                return `${m}:${s < 10 ? '0' : ''}${s}`;
+            };
+
+            // --- LYRIC SCROLLING LOGIC ---
+            useEffect(() => {
+                const container = lyricScrollRef.current;
+                if (!container) return;
+                const currentData = pages[currentPage];
+                if (currentData.noScroll) {
+                    container.scrollTop = 0;
+                    return;
+                }
+
+                const nextData = pages[currentPage + 1];
+                const startTime = currentData.timestamp;
+                const endTime = nextData ? nextData.timestamp : (duration || startTime + 20);
+                
+                const durationElapsed = endTime - startTime;
+                const elapsed = currentTime - startTime;
+                
+                if (elapsed >= 0 && durationElapsed > 0) {
+                    let progress = elapsed / durationElapsed;
+                    if (currentData.superSlowScroll) progress = Math.pow(progress, 2.5); 
+                    else if (currentData.slowScroll) progress = Math.pow(progress, 1.4); 
+                    const maxScroll = container.scrollHeight - container.clientHeight;
+                    if (maxScroll > 0) container.scrollTop = maxScroll * progress;
+                }
+            }, [currentTime, currentPage, duration]);
+
+
+            const currentData = pages[currentPage];
+
+            return (
+                <div className="flex flex-col h-[100dvh] bg-gray-950 text-white font-sans overflow-hidden relative z-10">
+                    
+                    {/* YouTube Player - Technically in DOM but invisible to prevent blocking */}
+                    {!useMp3Fallback ? (
+                        <div className="absolute top-0 left-0 w-1 h-1 opacity-0 pointer-events-none overflow-hidden">
+                            <div id="youtube-player"></div>
+                        </div>
+                    ) : (
+                        <audio 
+                            ref={audioRef}
+                            src={fallbackAudioUrl}
+                            onEnded={() => setIsPlaying(false)}
+                            onLoadedMetadata={(e) => setDuration(e.target.duration)}
+                            onError={(e) => {
+                                setAudioStatus('error');
+                            }}
+                            className="hidden"
+                        />
+                    )}
+
+                    {/* HEADER */}
+                    <header className="h-14 sm:h-16 shrink-0 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 z-40 relative">
+                        <div className="flex items-center space-x-2 text-pink-500 shrink-0">
+                            <span className="font-bangers text-xl tracking-widest leading-none text-red-500">MEAT LOAF</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 bg-black/40 px-4 py-2 rounded-full border border-gray-800 shadow-inner">
+                            <div className="hidden md:flex items-center border-r border-gray-700 pr-3 mr-1">
+                                {isSilentMode ? (
+                                    <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse mr-2 shadow-[0_0_8px_rgba(250,204,21,0.8)]"></span>
+                                ) : audioStatus === 'loading' ? (
+                                    <Loader2 size={14} className="animate-spin text-blue-400 mr-2" />
+                                ) : audioStatus === 'error' ? (
+                                    <AlertCircle size={14} className="text-red-500 mr-2" />
+                                ) : (
+                                    <span className={`w-2 h-2 rounded-full ${useMp3Fallback ? 'bg-amber-500' : 'bg-green-500'} animate-pulse mr-2 shadow-[0_0_8px_rgba(34,197,94,0.8)]`}></span>
+                                )}
+                                <span className="text-[10px] font-bold text-gray-300 tracking-widest uppercase">
+                                    {isSilentMode ? 'Silent Rehearsal' : audioStatus === 'loading' ? 'Buffering' : useMp3Fallback ? 'Audio Blocked' : 'YT Sync'}
+                                </span>
+                            </div>
+                            
+                            <button onClick={() => setAutoFlip(!autoFlip)} className={`p-1 ${autoFlip ? 'text-green-500' : 'text-gray-500'}`} title="Auto-Flip Toggle">
+                                <Zap size={18}/>
+                            </button>
+                            
+                            <button onClick={togglePlay} className={`text-white transition-colors hover:text-red-500`}>
+                                {isPlaying ? <Pause size={22} /> : <Play size={22} />}
+                            </button>
+
+                            <button onClick={() => setShowDebug(!showDebug)} className={`p-1 transition-colors ${showDebug ? 'text-green-400' : 'text-gray-500 hover:text-white'}`} title="Toggle Debugger">
+                                <Bug size={18} />
+                            </button>
+                        </div>
+
+                        <div className="text-xs sm:text-sm font-mono text-gray-500 w-16 text-right">Panel {currentPage + 1}/{totalPages}</div>
+                    </header>
+
+                    {/* DEBUGGER OVERLAY */}
+                    {showDebug && (
+                        <div className="absolute top-16 left-0 right-0 z-50 bg-gray-900/95 border-b border-green-600/50 p-4 shadow-xl backdrop-blur-md animate-in slide-in-from-top-2">
+                            <div className="max-w-5xl mx-auto flex flex-col gap-2">
+                                <div className="flex justify-between items-end text-xs font-mono text-green-400 mb-1">
+                                    <span>Time: {formatTime(currentTime)} <span className="text-gray-500">({currentTime.toFixed(2)}s)</span></span>
+                                    <span>Current Panel Target: {currentData.timestamp}s</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max={duration} 
+                                        step="0.1" 
+                                        value={currentTime} 
+                                        onChange={handleSeek}
+                                        className="flex-1"
+                                    />
+                                </div>
+                                <div className="text-[10px] text-gray-500 font-mono mt-1 flex justify-between">
+                                    <span>{useMp3Fallback ? "Audio blocked in this preview window. Drag slider to test or press Play for silent rehearsal." : "Drag slider to test panel transitions"}</span>
+                                    <span>{formatTime(duration)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MAIN CONTENT */}
+                    <main className="flex-1 min-h-0 relative flex items-center justify-center p-2 sm:p-4 w-full">
+                        <button onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)} className="absolute left-2 sm:left-4 z-30 p-2 bg-black/50 text-white/50 hover:text-white rounded-full transition-colors"><ChevronLeft size={28}/></button>
+                        <button onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)} className="absolute right-2 sm:right-4 z-30 p-2 bg-black/50 text-white/50 hover:text-white rounded-full transition-colors"><ChevronRight size={28}/></button>
+
+                        <div className="w-full max-w-5xl h-full flex flex-col items-center justify-center">
+                            <div key={currentPage} className="comic-panel relative w-full h-full bg-white flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-500 rounded-lg">
+                                
+                                <div className={`flex-1 relative overflow-hidden ${currentData.bgColor || 'bg-gray-200'} flex items-center justify-center w-full min-h-0 p-4 sm:p-6`}>
+                                    
+                                    {/* Placeholder text indicating which image to draw next */}
+                                    <div className="absolute text-center opacity-50 z-0">
+                                        <div className="text-xl font-bold font-mono text-white/50">AWAITING IMAGE</div>
+                                        <div className="text-sm font-mono text-white/40">Upload as: {currentPage + 1}.jpg</div>
+                                        {useMp3Fallback && (
+                                            <div className="text-[10px] font-mono text-yellow-400 mt-4 bg-black/80 border border-yellow-600/50 p-2 rounded max-w-xs mx-auto leading-relaxed">
+                                                <strong>Sandbox Block:</strong> YouTube audio is muted in this preview. 
+                                                <br/>Click PLAY to test transitions silently, or deploy to GitHub to hear the music!
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {currentData.image && <img src={currentData.image} className="w-full h-full transition-all duration-300 object-contain relative z-10" alt={`Panel ${currentPage + 1}`} />}
+                                    
+                                    {currentData.type === 'intro' && (
+                                        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-transparent flex flex-col items-center justify-start pt-12 sm:pt-20 p-4 text-center pointer-events-none z-20">
+                                            <h1 className="text-4xl sm:text-6xl font-black text-red-600 font-bangers tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">OBJECTS IN THE</h1>
+                                            <h1 className="text-4xl sm:text-6xl font-black text-white font-bangers tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">REAR VIEW MIRROR</h1>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {currentData.type !== 'intro' && !currentData.noScroll && (
+                                    <div className="shrink-0 bg-white border-t-2 sm:border-t-4 border-black p-3 sm:p-6 flex flex-col items-center justify-center text-center relative h-[30%] min-h-[110px] max-h-[190px]">
+                                        <div ref={lyricScrollRef} className="no-scrollbar overflow-y-auto w-full px-2 sm:px-6 h-full smooth-scroll">
+                                            <div className="font-comic text-black text-lg sm:text-xl md:text-2xl font-bold py-2 sm:py-4">
+                                                {currentData.lyrics.split('\n').map((line, i) => <p key={i} className="mb-1 sm:mb-2">{line}</p>)}
+                                                <div className="h-32"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="absolute bottom-2 left-6 font-signature text-2xl sm:text-4xl text-black/40 pointer-events-none z-30">Sinan</div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ComicReader />);
+    </script>
+</body>
+</html>
