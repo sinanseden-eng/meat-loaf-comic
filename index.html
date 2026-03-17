@@ -349,8 +349,22 @@
                 
                 if (elapsed >= 0 && durationElapsed > 0) {
                     let progress = elapsed / durationElapsed;
-                    if (currentData.superSlowScroll) progress = Math.pow(progress, 2.5); 
-                    else if (currentData.slowScroll) progress = Math.pow(progress, 1.4); 
+                    
+                    // Fix: Force the scroll to finish earlier so the last lines have time to be read
+                    if (currentData.superSlowScroll) {
+                        progress = elapsed / (durationElapsed * 0.85); // Finish at 85% of panel time
+                    } else if (currentData.slowScroll) {
+                        progress = elapsed / (durationElapsed * 0.70); // Finish at 70% of panel time
+                    }
+                    
+                    // Clamp progress to exactly 1 so it doesn't try to scroll past the bottom
+                    progress = Math.min(1, Math.max(0, progress));
+                    
+                    // Apply a smooth ease-out curve so the scrolling gracefully glides to a halt
+                    if (currentData.slowScroll || currentData.superSlowScroll) {
+                        progress = 1 - Math.pow(1 - progress, 3); // Ease Out Cubic
+                    }
+                    
                     const maxScroll = container.scrollHeight - container.clientHeight;
                     if (maxScroll > 0) container.scrollTop = maxScroll * progress;
                 }
