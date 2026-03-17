@@ -140,6 +140,8 @@
 
                     playerRef.current = new window.YT.Player('youtube-player', {
                         videoId: videoId,
+                        width: '100%',
+                        height: '100%',
                         host: 'https://www.youtube-nocookie.com', // Best for bypassing strict iframe rules
                         playerVars: { 
                             'autoplay': 0, 
@@ -317,9 +319,9 @@
             return (
                 <div className="flex flex-col h-[100dvh] bg-gray-950 text-white font-sans overflow-hidden relative z-10">
                     
-                    {/* YouTube Player - Technically in DOM but invisible to prevent blocking */}
+                    {/* YouTube Player - Now visible as a small thumbnail to prevent copyright issues */}
                     {!useMp3Fallback ? (
-                        <div className="absolute top-0 left-0 w-1 h-1 opacity-0 pointer-events-none overflow-hidden">
+                        <div className="absolute bottom-4 right-4 w-32 sm:w-40 aspect-video z-50 rounded-md overflow-hidden border border-gray-700 shadow-2xl bg-black pointer-events-none opacity-80">
                             <div id="youtube-player"></div>
                         </div>
                     ) : (
