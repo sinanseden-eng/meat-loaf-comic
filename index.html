@@ -36,29 +36,6 @@
                 border: 4px solid black;
             }
         }
-
-        /* Debugger Slider Styling */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #22c55e;
-            cursor: pointer;
-            margin-top: -6px;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #374151;
-            border-radius: 2px;
-        }
     </style>
 </head>
 <body class="bg-gray-950 text-white">
@@ -75,7 +52,6 @@
         const ChevronRight = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
         const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"/></Icon>;
         const Pause = (props) => <Icon {...props}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></Icon>;
-        const Bug = (props) => <Icon {...props}><rect width="8" height="14" x="8" y="6" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/></Icon>;
         const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
         const Loader2 = (props) => <Icon {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></Icon>;
         const AlertCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></Icon>;
@@ -132,7 +108,6 @@
             const [autoFlip, setAutoFlip] = useState(true);
             const [currentTime, setCurrentTime] = useState(0);
             const [duration, setDuration] = useState(616); // 10:16
-            const [showDebug, setShowDebug] = useState(true);
             
             // Dual Engine System
             const [useMp3Fallback, setUseMp3Fallback] = useState(false);
@@ -302,28 +277,6 @@
                 }
             };
 
-            const handleSeek = (e) => {
-                const newTime = parseFloat(e.target.value);
-                setCurrentTime(newTime);
-                
-                if (autoFlip) {
-                    let activeIndex = 0;
-                    for (let i = 0; i < pages.length; i++) {
-                        if (newTime >= pages[i].timestamp) activeIndex = i;
-                        else break;
-                    }
-                    if (activeIndex !== currentPage) setCurrentPage(activeIndex);
-                }
-
-                if (isSilentMode) {
-                    // Do nothing, time is updated
-                } else if (useMp3Fallback && audioRef.current && !audioRef.current.error) {
-                    audioRef.current.currentTime = newTime;
-                } else if (playerRef.current && playerRef.current.seekTo) {
-                    playerRef.current.seekTo(newTime, true);
-                }
-            };
-
             const formatTime = (seconds) => {
                 const m = Math.floor(seconds / 60);
                 const s = Math.floor(seconds % 60);
@@ -411,41 +364,10 @@
                             <button onClick={togglePlay} className={`text-white transition-colors hover:text-red-500`}>
                                 {isPlaying ? <Pause size={22} /> : <Play size={22} />}
                             </button>
-
-                            <button onClick={() => setShowDebug(!showDebug)} className={`p-1 transition-colors ${showDebug ? 'text-green-400' : 'text-gray-500 hover:text-white'}`} title="Toggle Debugger">
-                                <Bug size={18} />
-                            </button>
                         </div>
 
                         <div className="text-xs sm:text-sm font-mono text-gray-500 w-16 text-right">Panel {currentPage + 1}/{totalPages}</div>
                     </header>
-
-                    {/* DEBUGGER OVERLAY */}
-                    {showDebug && (
-                        <div className="absolute top-16 left-0 right-0 z-50 bg-gray-900/95 border-b border-green-600/50 p-4 shadow-xl backdrop-blur-md animate-in slide-in-from-top-2">
-                            <div className="max-w-5xl mx-auto flex flex-col gap-2">
-                                <div className="flex justify-between items-end text-xs font-mono text-green-400 mb-1">
-                                    <span>Time: {formatTime(currentTime)} <span className="text-gray-500">({currentTime.toFixed(2)}s)</span></span>
-                                    <span>Current Panel Target: {currentData.timestamp}s</span>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <input 
-                                        type="range" 
-                                        min="0" 
-                                        max={duration} 
-                                        step="0.1" 
-                                        value={currentTime} 
-                                        onChange={handleSeek}
-                                        className="flex-1"
-                                    />
-                                </div>
-                                <div className="text-[10px] text-gray-500 font-mono mt-1 flex justify-between">
-                                    <span>{useMp3Fallback ? "Audio blocked in this preview window. Drag slider to test or press Play for silent rehearsal." : "Drag slider to test panel transitions"}</span>
-                                    <span>{formatTime(duration)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* MAIN CONTENT */}
                     <main className="flex-1 min-h-0 relative flex items-center justify-center p-2 sm:p-4 w-full">
